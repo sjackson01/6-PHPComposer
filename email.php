@@ -1,8 +1,15 @@
 <?php
+
+// Composer will use autoloader to load vendor files when needed 
+require __DIR__ . '/vendor/autoload.php';
+
 $subject = $name = $email = $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $message = filter_input(INPUT_POST,'message');
+    // Use html purifier
+    $purifier = new HTMLPurifier();
+    // No need to filter sanitize string since html p handles that task
+    $message = $purifier->purify(filter_input(INPUT_POST,'message'));
     
     $subject = trim(filter_input(INPUT_POST, 'subject', FILTER_SANITIZE_STRING));
     $name = trim(filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING));
@@ -25,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error_message = "Your form submission has an error.";
     }
 
-    $mail = new PHPMailer();
+    $mail = new PHPMailer\PHPMailer\PHPMailer();
 
     if (!isset($error_message) && !$mail->ValidateAddress($email)) {
         $error_message = "You must specify a valid email address.";
@@ -60,6 +67,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 include("inc/header.php"); ?>
+<!-- Link to the ckeditor --> 
+<script src="vendor/ckeditor/ckeditor/ckeditor.js"></script>
                 <div class="new-entry">
                     <h2>HTML Email</h2>
                     <?php
@@ -76,6 +85,8 @@ include("inc/header.php"); ?>
                         <input type="text" name="subject" id="subject" value="<?php echo $subject; ?>" />
                         <label for="message">Message (required)</label>
                         <textarea rows="5" name="message"><?php echo $message; ?></textarea>
+                        <!-- Add editor that allows us to format the email message --> 
+                        <script>CKEDITOR.replace('message');</script>
                         <input type="submit" value="Send" class="button">
                         <div style="display:none">
                         <label for="address">Address</label>
